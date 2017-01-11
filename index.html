@@ -26,10 +26,8 @@
       <div class="row">
         <!-- Dropdown Structure -->
         <ul id="nav-dropdown" class="dropdown-content">
-          <li><a href="#!">one</a></li>
-          <li><a href="#!">two</a></li>
+          <li><a href="#upload-modal" class="black-text" id="add-new-song">Add New Song(s)</a></li>
           <li class="divider"></li>
-          <li><a href="#!">three</a></li>
         </ul>
         <!-- Dropdown Structure End -->
         <nav>
@@ -44,20 +42,35 @@
         </nav>
         
       </div>
+      <!-- Upload File Modal Structure -->
+      <div id="upload-modal" class="modal">
+        <div class="modal-content">
+          <h4>Upload File(s)</h4>
+          <div id="center-align">
+            <a class="waves-effect waves-light btn center-align" id="upload-file-button"  onclick="uploadFile()">Select Files</a>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Close</a>
+        </div>
+      </div>
     </body>
+
   </main>
   <footer class="page-footer valign-wrapper blue-grey darken-4" style="padding: 15px">
-    <a class="btn-floating"><i class="material-icons">skip_previous</i></a>
-    <a class="btn-floating btn-large waves-effect waves-light green hoverable"><i class="material-icons">play_arrow</i></a>
-    <a class="btn-floating"><i class="material-icons">skip_next</i></a>
-    <span class="container" style="padding-left:20px;padding-right:20px;">
+    <a class="btn-floating transparent" style="min-width:40px; min-height: 40px;"><i class="material-icons">skip_previous</i></a>
+    <a class="btn-floating btn-large waves-effect waves-light green hoverable" style="min-width:56px; min-height: 56px;"><i class="material-icons">play_arrow</i></a>
+    <a class="btn-floating transparent" style="min-width:40px; min-height: 40px;"><i class="material-icons">skip_next</i></a>
+    <span style="padding-left:20px;padding-right:20px; width: 90%;">
       <div class="progress">
         <div class="determinate" style="width: 70%"></div>
       </div>
-      <div class="chip right-align">
+      <a href="#"><i class="material-icons grey-text text-lighten-2">repeat</i></a><a href="#"><i class="material-icons grey-text text-lighten-2">shuffle</i></a>
+      <span class="badge white">
         2:59 / 4:15
-      </div>
+      </span>
     </span>
+    <a href="#"><i class="material-icons">star</i></a><a href="#"><i class="material-icons">playlist_add</i></a>
   </footer>  
   
 
@@ -71,9 +84,33 @@
 
   <script>
   $(document).ready(function(){
-    $(".dropdown-button").dropdown();
+    $(".dropdown-button").dropdown({
+      hover: false,
+      belowOrigin: true,
+      constrain_width: false
+    });
+    $('.modal').modal();
   });
+  function uploadFile(){
+    var app = require('electron').remote; 
+    var dialog = app.dialog;
+    dialog.showOpenDialog({
+        title:"Select a folder",
+        properties: ["multiSelections", "openFile"],
+        filters: [
+        {name: 'Audio files', extensions: ['mp3', 'mp4', 'm4a', 'wav', 'wma', 'midi']}
+        ]
+    },function (folderPaths) {
+        if(folderPaths === undefined){
+            console.log("No destination folder selected");
+            return;
+        }else{
+            console.log(folderPaths);
+        }
+    });
+  };
   </script>
+  
   <script>if (window.module) module = window.module;</script>
   
 </html>
