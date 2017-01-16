@@ -15,6 +15,10 @@
       main {
         flex: 1 0 auto;
       }
+      .material-icons.md-18 { font-size: 18px; }
+      .material-icons.md-24 { font-size: 24px; }
+      .material-icons.md-36 { font-size: 36px; }
+      .material-icons.md-48 { font-size: 48px; }
     </style>
 
   </head>
@@ -26,14 +30,15 @@
       <div class="row">
         <!-- Dropdown Structure -->
         <ul id="nav-dropdown" class="dropdown-content">
-          <li><a href="#upload-modal" class="black-text" id="add-new-song">Add New Song(s)</a></li>
+          <li><a href="#" class="black-text" id="add-new-song" onclick="uploadFile()">Add New Song(s)</a></li>
           <li class="divider"></li>
         </ul>
         <!-- Dropdown Structure End -->
         <nav>
           <div class="nav-wrapper blue darken-4">
-            <a href="#!" class="brand-logo">Logo</a>
+            <a href="#!" class="brand-logo"><i class="material-icons md-36">group_work</i></a>
             <ul class="right hide-on-small-and-down">
+              <li><a href="#"><i class="material-icons">refresh</i></a></li>
               <li><a href="#"><i class="material-icons">search</i></a></li>
               <li><a href="#"><i class="material-icons">web</i></a></li>
               <li><a class="dropdown-button" href="#" data-activates="nav-dropdown"><i class="material-icons">view_module</i></a></li>
@@ -47,7 +52,7 @@
         <div class="modal-content">
           <h4>Upload File(s)</h4>
           <div id="center-align">
-            <a class="waves-effect waves-light btn center-align" id="upload-file-button"  onclick="uploadFile()">Select Files</a>
+            <a class="waves-effect waves-light btn center-align" id="upload-file-button">Select Files</a>
           </div>
         </div>
         <div class="modal-footer">
@@ -83,32 +88,123 @@
   <!-- Insert this line after script imports -->
 
   <script>
-  $(document).ready(function(){
-    $(".dropdown-button").dropdown({
-      hover: false,
-      belowOrigin: true,
-      constrain_width: false
+    $(document).ready(function(){
+      $(".dropdown-button").dropdown({
+        hover: false,
+        belowOrigin: true,
+        constrain_width: false
+      });
+      $('.modal').modal();
+      var Datastore = require('nedb');
+      var db = new Datastore({ filename: __dirname + '/library-songs.db', autoload: true, timestampData: true });
+
+      db.find({}, function(err, docs){
+        console.log(docs);
+      });
     });
-    $('.modal').modal();
-  });
-  function uploadFile(){
-    var app = require('electron').remote; 
-    var dialog = app.dialog;
-    dialog.showOpenDialog({
-        title:"Select a folder",
-        properties: ["multiSelections", "openFile"],
-        filters: [
-        {name: 'Audio files', extensions: ['mp3', 'mp4', 'm4a', 'wav', 'wma', 'midi']}
-        ]
-    },function (folderPaths) {
-        if(folderPaths === undefined){
-            console.log("No destination folder selected");
-            return;
-        }else{
-            console.log(folderPaths);
+
+    function uploadFile(){
+
+      var jsmediatags = require("jsmediatags");
+      var fs = require('fs-extra');
+      var app = require('electron').remote; 
+      var path = require('path');
+      var dialog = app.dialog;
+      var jsmediatags = require("jsmediatags");
+      var Datastore = require('nedb');
+      var db = new Datastore({ filename: __dirname + '/library-songs.db', autoload: true, timestampData: true });
+
+
+      dialog.showOpenDialog({
+          title:"Select a folder",
+          properties: ["multiSelections", "openFile"],
+          filters: [
+          {name: 'Audio files', extensions: ['mp3', 'mp4', 'm4a', 'wav', 'wma', 'midi']}
+          ]
+      },function (folderPaths) {
+          if(folderPaths === undefined){
+              console.log("No destination folder selected");
+              return;
+          }else{
+            for (var key in folderPaths) {
+              try {
+                var newFileName = folderPaths[key].slice(folderPaths[key].lastIndexOf('/')+1,folderPaths[key].length);
+                var artist, album, title;
+
+                jsmediatags.read(folderPaths[key], {
+                  onSuccess: function(tag) {
+                    // console.log(tag.tags);
+                    artist = tag.tags.artist;
+                    album = tag.tags.album;
+                    title = tag.tags.title;
+                    directory = __dirname + "/library/"+artist+"/"+album+"/";
+                    var songObj = {
+                      title: tag.tags.title,
+                      album: tag.tags.album,
+                      artist: tag.tags.artist,
+                      link: directory + newFileName
+                    };
+                    
+                    if (!fs.existsSync(directory)){
+                      fs.mkdirs(directory);
+                      setTimeout(function (){
+                        fs.createReadStream(folderPaths[key]).pipe(fs.createWriteStream(directory + newFileName));
+
+                      }, 500);
+                    }
+                    else{
+                      fs.createReadStream(folderPaths[key]).pipe(fs.createWriteStream(directory + newFileName));
+
+                    }
+                    db.insert(songObj, function (err, newDoc) {
+                      
+                    });
+                  },
+                  onError: function(error) {
+                    console.log(':(', error.type, error.info);
+                  }
+                });
+
+              }
+              catch(err){
+
+              }
+            }
+          }
+      });
+    };
+
+    //---------------------------------
+    function getAllFilesFromFolder(dir) {
+
+      var filesystem = require("fs");
+      var results = [];
+
+      filesystem.readdirSync(dir).forEach(function(file) {
+
+       file = dir+'/'+file;
+        var stat = filesystem.statSync(file);
+
+        if (stat && stat.isDirectory()) {
+          results = results.concat(getAllFilesFromFolder(file))
+        } else if(file.includes(".DS_Store")){
+
+        } else{ 
+          results.push(file);
         }
-    });
-  };
+      });
+
+      return results;
+    };
+
+    
+
+  </script>
+
+  <script> //--------------------------------- NeDB Database Scripts ---------------------------------\\
+    
+
+
   </script>
   
   <script>if (window.module) module = window.module;</script>
